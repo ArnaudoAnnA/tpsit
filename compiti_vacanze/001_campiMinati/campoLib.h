@@ -1,0 +1,62 @@
+#ifndef CAMPOLIB_H_INCLUDED
+#define CAMPOLIB_H_INCLUDED
+
+#include "costants.h"
+
+int** creaCampo(int n_ordine, int n_tesori, int n_bombe, int n_prigionieri);
+void freeCampo(int** campo, int n_ordine);
+
+int** creaCampo(int n_ordine, int n_tesori, int n_bombe, int n_prigionieri)
+{
+    /*I assign a space of memory in static mode to the shm that contains the field*/
+    int shm_id;
+    int len = sizeof(int)*n_ordine*n_ordine;
+    int** campo= (int**) shm_create(IPC_CAMPO_KEY, len, &shm_id);
+
+
+    /*I fill in the field with treasure and bomb*/
+    int r, c;
+    srand(time(NULL));
+    int n_totali = n_ordine*n_ordine;
+    int n_vuote = n_totali-(n_tesori+n_bombe);
+
+    //I cycle all the field and for each cycle I assign a random value to the component of the field
+    for(r = 0; r<n_ordine; r++)
+    {
+        for(c = 0; c<n_ordine; c++)
+        {
+            if(rand()%(n_tesori+n_bombe+n_vuote)<=n_vuote)
+            {
+                campo[r][c] = VUOTA;
+                n_vuote--;
+            }else if(rand()%(n_tesori+n_bombe+n_vuote)<=n_bombe)
+            {
+                campo[r][c] = BOMBA;
+                n_bombe--;
+            }else
+            {
+                campo[r][c] = TESORO;
+                n_tesori--;
+            }
+        }
+    }
+
+    return campo;
+}
+
+void freeCampo(int** campo, int n_ordine)
+{
+    int r, c;
+
+    for(r=0; r<n_ordine; r++)
+    {
+        for(c=0; c<n_ordine; c++)
+        {
+            free(&campo[r][c]);
+        }
+    }
+
+    free(campo);
+}
+
+#endif // CAMPOLIB_H_INCLUDED
